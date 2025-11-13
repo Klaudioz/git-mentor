@@ -66,12 +66,12 @@ class SetupScreen(Screen):
                 yield Static("🎓 Commit Teacher", id="title")
                 yield Static(
                     "Learn code through commit history\n"
-                    "Enter a GitHub repository URL to begin",
+                    "Enter a GitHub repository URL or local path",
                     id="description"
                 )
-                yield Label("Repository URL:")
+                yield Label("Repository URL or Path:")
                 yield Input(
-                    placeholder="https://github.com/user/repo",
+                    placeholder="https://github.com/user/repo or /path/to/repo",
                     id="repo-input"
                 )
                 yield Button("Clone Repository", variant="primary", id="clone-btn")
@@ -95,21 +95,29 @@ class SetupScreen(Screen):
         repo_url = input_widget.value.strip()
 
         if not repo_url:
-            status_widget.update("Please enter a repository URL")
+            status_widget.update("Please enter a repository URL or path")
             status_widget.add_class("error")
             return
 
-        status_widget.update("Cloning repository...")
+        # Detect if input is a local path or URL
+        is_local = not repo_url.startswith(('http://', 'https://', 'git@'))
+
+        if is_local:
+            status_widget.update("Loading local repository...")
+        else:
+            status_widget.update("Cloning repository...")
+
         status_widget.remove_class("error")
         status_widget.remove_class("success")
 
-        # Send message to app to handle cloning
-        self.app.post_message(CloneRepository(repo_url))
+        # Send message to app to handle cloning/loading
+        self.app.post_message(CloneRepository(repo_url, is_local=is_local))
 
 
 class CloneRepository(Message):
-    """Message to request repository cloning."""
+    """Message to request repository cloning or loading."""
 
-    def __init__(self, repo_url: str):
+    def __init__(self, repo_url: str, is_local: bool = False):
         super().__init__()
         self.repo_url = repo_url
+        self.is_local = is_local

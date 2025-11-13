@@ -32,7 +32,7 @@ class CommitTeacherApp(App):
         "chat": ChatScreen,
     }
 
-    def __init__(self, initial_repo=None, use_cache=True, auto_resume=False, *args, **kwargs):
+    def __init__(self, initial_repo=None, is_local=False, use_cache=True, auto_resume=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         logger.info("Initializing CommitTeacherApp")
         self.git_handler = GitHandler()
@@ -42,6 +42,7 @@ class CommitTeacherApp(App):
         self.architecture = None
         self.last_explanation = None
         self.initial_repo = initial_repo
+        self.is_local = is_local
         self.use_cache = use_cache
         self.auto_resume = auto_resume
 
@@ -65,12 +66,13 @@ class CommitTeacherApp(App):
         from .screens.setup import CloneRepository
 
         # Simulate the CloneRepository message
-        message = CloneRepository(self.initial_repo)
+        message = CloneRepository(self.initial_repo, is_local=self.is_local)
         await self.on_clone_repository(message)
 
     async def on_clone_repository(self, message: CloneRepository) -> None:
-        """Handle repository cloning."""
-        logger.info(f"User requested to clone repository: {message.repo_url}")
+        """Handle repository cloning or loading."""
+        action = "load" if message.is_local else "clone"
+        logger.info(f"User requested to {action} repository: {message.repo_url}")
 
         # Check if we're on setup screen or commit screen
         current_screen = self.screen
@@ -94,10 +96,16 @@ class CommitTeacherApp(App):
                 except:
                     logger.info(msg)
 
-        update_status("Cloning repository...")
-
-        # Clone repository
-        success, msg = self.git_handler.clone_repository(message.repo_url)
+        # Load or clone repository
+        if message.is_local:
+            update_status("Loading local repository...")
+            success, msg = self.git_handler.load_repository(message.repo_url)
+            # For local repos, set the repo_url to the path for cache purposes
+            if success:
+                self.git_handler.repo_url = message.repo_url
+        else:
+            update_status("Cloning repository...")
+            success, msg = self.git_handler.clone_repository(message.repo_url)
 
         if not success:
             logger.error(f"Failed to clone repository: {msg}")
@@ -127,9 +135,16 @@ class CommitTeacherApp(App):
         try:
             logger.info("Initializing analyzer and storage")
             self.analyzer = CodeAnalyzer()
-            repo_name = message.repo_url.rstrip("/").split("/")[-1]
-            if repo_name.endswith(".git"):
-                repo_name = repo_name[:-4]
+
+            # Extract repository name differently for local vs remote
+            if message.is_local:
+                from pathlib import Path
+                repo_name = Path(message.repo_url).expanduser().resolve().name
+            else:
+                repo_name = message.repo_url.rstrip("/").split("/")[-1]
+                if repo_name.endswith(".git"):
+                    repo_name = repo_name[:-4]
+
             self.storage = StorageHandler(repo_name)
 
             # Load cache for this repository (if enabled)

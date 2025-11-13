@@ -20,8 +20,12 @@ Examples:
   # Start with interactive setup
   python main.py
 
-  # Load a specific repository
+  # Load a remote GitHub repository
   python main.py --repo https://github.com/badlogic/pi-mono
+
+  # Load a local repository
+  python main.py --local /path/to/my-project
+  python main.py --local ./my-project
 
   # Load repository and skip cache (fresh analysis)
   python main.py --repo https://github.com/pallets/click --no-cache
@@ -36,6 +40,13 @@ Examples:
         "-r",
         type=str,
         help="GitHub repository URL to analyze (e.g., https://github.com/owner/repo)"
+    )
+
+    parser.add_argument(
+        "--local",
+        "-l",
+        type=str,
+        help="Path to local Git repository (e.g., /path/to/repo or ./my-project)"
     )
 
     parser.add_argument(
@@ -63,9 +74,19 @@ def main():
     """Run the Commit Teacher application."""
     args = parse_args()
 
+    # Check for conflicting arguments
+    if args.repo and args.local:
+        print("Error: Cannot specify both --repo and --local. Choose one.", file=sys.stderr)
+        sys.exit(1)
+
+    # Determine the repository source
+    repo_source = args.repo if args.repo else args.local
+    is_local = bool(args.local)
+
     try:
         app = CommitTeacherApp(
-            initial_repo=args.repo,
+            initial_repo=repo_source,
+            is_local=is_local,
             use_cache=not args.no_cache,
             auto_resume=args.resume
         )

@@ -96,11 +96,17 @@ python main.py --repo https://github.com/badlogic/pi-mono
 # Interactive mode - shows setup screen
 python main.py
 
-# Load a specific repository directly
+# Load a remote GitHub repository
 python main.py --repo https://github.com/owner/repo
+
+# Load a local repository
+python main.py --local /path/to/my-project
+python main.py --local ~/projects/my-app
+python main.py --local ./my-local-repo
 
 # Skip cache and perform fresh analysis (uses more API calls)
 python main.py --repo https://github.com/owner/repo --no-cache
+python main.py --local ./my-project --no-cache
 
 # Force resume from last position
 python main.py --repo https://github.com/owner/repo --resume
@@ -111,9 +117,11 @@ python main.py --help
 
 ### First Run
 
-1. Enter a GitHub repository URL (start with small repos: 10-50 commits)
-   - Example: `https://github.com/pallets/click`
-   - Example: `https://github.com/kennethreitz/requests`
+1. Enter a GitHub repository URL or local path (start with small repos: 10-50 commits)
+   - Remote: `https://github.com/pallets/click`
+   - Local: `/Users/yourname/projects/my-app`
+   - Local: `~/projects/my-app`
+   - Local: `./my-local-repo`
 
 2. Wait for initial analysis (1-2 minutes for first commit)
 
@@ -166,14 +174,27 @@ python main.py
 # Continue learning!
 ```
 
-**Direct Mode:**
+**Direct Mode (Remote):**
 ```bash
-# Load repository directly from command line
+# Load remote repository directly from command line
 python main.py --repo https://github.com/pallets/click
 
 # Skip straight to first commit
 # No URL input required
 # Cache automatically resumes from last position if available
+```
+
+**Direct Mode (Local):**
+```bash
+# Load local repository directly from command line
+python main.py --local ~/projects/my-app
+
+# Works with relative and absolute paths
+python main.py --local ./my-project
+python main.py --local /Users/yourname/code/my-repo
+
+# All standard features work with local repos
+# Supports cache, resume, etc.
 ```
 
 **Fresh Analysis (No Cache):**
@@ -217,6 +238,23 @@ cd /path/to/commit-teacher
 python -m src.commit_teacher.main
 ```
 
+## Local vs Remote Repositories
+
+### Remote Repositories (GitHub)
+- Cloned to `repos/` directory
+- Requires network connection for initial clone
+- URL format: `https://github.com/owner/repo`
+
+### Local Repositories
+- Direct access to existing Git repositories on your machine
+- No cloning required (faster startup)
+- Path formats:
+  - Absolute: `/Users/yourname/projects/my-app`
+  - Home directory: `~/projects/my-app`
+  - Relative: `./my-local-repo`
+- All features work identically (cache, analysis, navigation, etc.)
+- Perfect for learning from your own projects
+
 ## Tips for Best Experience
 
 1. **Start Small**: Choose repositories with 10-50 commits for your first try
@@ -225,6 +263,7 @@ python -m src.commit_teacher.main
 4. **Review Architecture**: Periodically check the generated `.architecture.md` file
 5. **Take Notes**: Document interesting patterns and insights you discover
 6. **Compare Commits**: Think about how each change builds on previous ones
+7. **Use Local Repos**: Analyze your own projects to understand your development patterns
 
 ## Configuration
 

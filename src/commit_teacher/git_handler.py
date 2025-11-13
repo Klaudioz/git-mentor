@@ -143,7 +143,9 @@ class GitHandler:
             Tuple of (success, message)
         """
         try:
-            self.repo_path = Path(repo_path)
+            # Expand user home directory (~) and resolve to absolute path
+            self.repo_path = Path(repo_path).expanduser().resolve()
+            logger.info(f"Loading repository from: {self.repo_path}")
             self.repo = Repo(self.repo_path)
 
             # Get the default branch to ensure we load all commits

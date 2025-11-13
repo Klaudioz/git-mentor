@@ -359,6 +359,7 @@ python main.py [OPTIONS]
 
 Options:
   --repo, -r URL        GitHub repository URL to analyze
+  --local, -l PATH      Path to local Git repository
   --no-cache            Disable cache and perform fresh analysis
   --resume              Force resume from last viewed commit
   --version             Show version and exit
@@ -370,21 +371,28 @@ Options:
 # Interactive mode with setup screen
 python main.py
 
-# Load repository directly
+# Load remote repository directly
 python main.py --repo https://github.com/badlogic/pi-mono
+
+# Load local repository
+python main.py --local ~/projects/my-app
+python main.py --local ./my-project
 
 # Fresh analysis without cache
 python main.py --repo https://github.com/pallets/click --no-cache
+python main.py --local ./my-project --no-cache
 
 # Force resume from last position
 python main.py --repo https://github.com/badlogic/pi-mono --resume
 ```
 
 **Behavior:**
-- **Without --repo**: Shows interactive setup screen
-- **With --repo**: Skips setup, loads repository directly
+- **Without --repo or --local**: Shows interactive setup screen (accepts both URLs and local paths)
+- **With --repo**: Skips setup, clones remote repository directly
+- **With --local**: Skips setup, loads local repository directly
 - **Cache**: Enabled by default, use --no-cache to disable
 - **Resume**: Automatic if cache exists, --resume forces it
+- **Local Paths**: Supports ~/ (home directory), ./ (relative), and absolute paths
 
 ## Technical Decisions
 
